@@ -134,15 +134,21 @@ No signing credential is required by ordinary CI or unit tests.
 ## Data-source configuration
 
 An **Authentication Provider** supplies credentials, and an optional **Assume
-Role ARN** layers a role on top of it.
+Role ARN** layers a role on top of whichever provider you chose.
 
 ### Authentication Provider
 
+#### AWS SDK Default
+
+Resolves the AWS SDK credential chain — an EC2 instance profile, an ECS task
+role, or EKS web identity. Nothing is stored on the data source; attach the
+policy below to the role the Grafana server already runs as.
+
 #### Access & secret key
 
-Takes an access key ID, a secret access key, and an optional session token. The
-plugin installs an explicit credentials provider, so it never falls back to an
-ambient identity.
+Takes an access key ID, a secret access key, and an optional session token. It
+installs an explicit credentials provider and refuses to start without a key,
+so it never falls back to an ambient identity.
 
 All credential values are written to Grafana `secureJsonData`. Grafana encrypts
 them at rest and returns only configured/not-configured flags to the browser
@@ -153,9 +159,10 @@ cache keys.
 ### Assume Role ARN
 
 Optional, and independent of the provider: the selected provider is used to
-assume the role rather than to query Cost Explorer directly. An external ID and
-role session name may be given alongside it, and the external ID is stored as a
-secret.
+assume the role rather than to query Cost Explorer directly, so an instance
+profile can assume a cross-account role just as an access key can. An external
+ID and role session name may be given alongside it, and the external ID is
+stored as a secret.
 
 The resolved identity needs `sts:AssumeRole` on the target role, and that
 role's trust policy must trust it.

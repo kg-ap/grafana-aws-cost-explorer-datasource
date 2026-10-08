@@ -69,6 +69,12 @@ optional session token directly to the AWS SDK static provider. An explicit
 provider is installed, preventing fallback to environment variables, shared
 files, web identity, or instance metadata.
 
+### AWS SDK Default (`default`)
+
+The backend installs no credentials provider and lets `LoadDefaultConfig`
+resolve the AWS SDK default chain. This is the only provider that reads an
+ambient identity, and it is never reached by fallback.
+
 ### Assume Role ARN
 
 When set, the credentials resolved above sign an STS call rather than a Cost

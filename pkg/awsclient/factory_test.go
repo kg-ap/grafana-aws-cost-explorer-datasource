@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/ivlabs-dev/grafana-aws-cost-explorer-datasource/pkg/models"
 )
@@ -38,6 +40,22 @@ func TestAccessKeyAuthenticationIgnoresAmbientCredentials(t *testing.T) {
 	}
 }
 
+func TestDefaultProviderResolvesTheSDKChain(t *testing.T) {
+	isolateAmbientCredentials(t, "ambient-access-key", "ambient-secret")
+
+	bundle, err := NewFactory().New(context.Background(), models.PluginSettings{
+		AuthType: models.AuthProviderDefault,
+		Region:   "us-east-1",
+		Secrets:  &models.SecretPluginSettings{},
+	})
+	if err != nil {
+		t.Fatalf("build default chain client: %v", err)
+	}
+	if got := retrieveAccessKeyID(t, bundle); got != "ambient-access-key" {
+		t.Fatalf("the default provider resolved %q; expected the AWS SDK default chain", got)
+	}
+}
+
 func costExplorerClient(t *testing.T, bundle *Bundle) *costexplorer.Client {
 	t.Helper()
 	client, ok := bundle.CostExplorer.(*costexplorer.Client)
@@ -54,4 +72,25 @@ func retrieveAccessKeyID(t *testing.T, bundle *Bundle) string {
 		t.Fatalf("retrieve credentials: %v", err)
 	}
 	return credentials.AccessKeyID
+}
+
+// A role hop is wired on top of whichever provider was selected, so the client
+// signs with the assumed role rather than with what the chain resolved.
+func TestDefaultProviderCanAssumeARole(t *testing.T) {
+	isolateAmbientCredentials(t, "ambient-access-key", "ambient-secret")
+
+	bundle, err := NewFactory().New(context.Background(), models.PluginSettings{
+		AuthType:        models.AuthProviderDefault,
+		Region:          "us-east-1",
+		AssumeRoleARN:   "arn:aws:iam::123456789012:role/GrafanaCostExplorer",
+		RoleSessionName: "grafana-cost-explorer",
+		Secrets:         &models.SecretPluginSettings{},
+	})
+	if err != nil {
+		t.Fatalf("build default chain client assuming a role: %v", err)
+	}
+
+	if !aws.IsCredentialsProvider(costExplorerClient(t, bundle).Options().Credentials, &stscreds.AssumeRoleProvider{}) {
+		t.Fatal("credentials do not come from an AssumeRole provider; the role hop was not wired up")
+	}
 }

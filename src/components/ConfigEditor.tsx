@@ -80,22 +80,35 @@ export function ConfigEditor({ onOptionsChange, options }: Props) {
         />
       </InlineField>
 
-      <Alert title="Use short-lived credentials" severity="warning">
-        Prefer temporary AWS credentials and rotate configured credentials regularly.
-      </Alert>
-      <InlineField label="Access key ID" labelWidth={24} required>
-        {secretInput('accessKeyId', 'config-access-key-id', 'AWS access key ID')}
-      </InlineField>
-      <InlineField label="Secret access key" labelWidth={24} required>
-        {secretInput('secretAccessKey', 'config-secret-access-key', 'AWS secret access key')}
-      </InlineField>
-      <InlineField label="Session token" labelWidth={24}>
-        {secretInput('sessionToken', 'config-session-token', 'Optional temporary session token')}
-      </InlineField>
-      {errors.credentials && (
-        <Alert title="Credentials are incomplete" severity="error">
-          {errors.credentials}
+      {jsonData.authType === 'default' && (
+        <Alert title="No credentials are stored for this data source" severity="info">
+          The AWS SDK default chain resolves the EC2 instance profile, ECS task role, EKS web identity, or the plugin
+          process environment. Attach the Cost Explorer policy to the role the Grafana server already runs as. A Grafana
+          administrator can withhold this by removing <code>default</code> from <code>allowed_auth_providers</code> in
+          the <code>[aws]</code> configuration section.
         </Alert>
+      )}
+
+      {jsonData.authType === 'keys' && (
+        <>
+          <Alert title="Use short-lived credentials" severity="warning">
+            Prefer temporary AWS credentials and rotate configured credentials regularly.
+          </Alert>
+          <InlineField label="Access key ID" labelWidth={24} required>
+            {secretInput('accessKeyId', 'config-access-key-id', 'AWS access key ID')}
+          </InlineField>
+          <InlineField label="Secret access key" labelWidth={24} required>
+            {secretInput('secretAccessKey', 'config-secret-access-key', 'AWS secret access key')}
+          </InlineField>
+          <InlineField label="Session token" labelWidth={24}>
+            {secretInput('sessionToken', 'config-session-token', 'Optional temporary session token')}
+          </InlineField>
+          {errors.credentials && (
+            <Alert title="Credentials are incomplete" severity="error">
+              {errors.credentials}
+            </Alert>
+          )}
+        </>
       )}
 
       <h3>Assume Role</h3>

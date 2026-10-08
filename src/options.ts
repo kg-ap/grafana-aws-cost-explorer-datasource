@@ -1,7 +1,11 @@
 import { ComboboxOption } from '@grafana/ui';
 import { AuthType, CostMetric, Granularity, GroupBy, ResultFormat, TopN } from './types';
 
-export const AUTH_OPTIONS: Array<ComboboxOption<AuthType>> = [{ label: 'Access & secret key', value: 'keys' }];
+// Grafana's shared credentials file provider is omitted; this plugin does not read one.
+export const AUTH_OPTIONS: Array<ComboboxOption<AuthType>> = [
+  { label: 'AWS SDK Default', value: 'default' },
+  { label: 'Access & secret key', value: 'keys' },
+];
 
 export const METRIC_OPTIONS: Array<ComboboxOption<CostMetric>> = [
   { label: 'Unblended cost', value: 'UnblendedCost' },

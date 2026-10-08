@@ -39,17 +39,19 @@ func (f *SDKFactory) New(ctx context.Context, settings models.PluginSettings) (*
 	if err := settings.Validate(); err != nil {
 		return nil, err
 	}
+	loadOptions := []func(*config.LoadOptions) error{config.WithRegion(settings.Region)}
+
 	// Installing the credentials supplied through Grafana keeps the SDK from
-	// resolving ambient environment, file, or workload credentials.
-	loadOptions := []func(*config.LoadOptions) error{
-		config.WithRegion(settings.Region),
-		config.WithCredentialsProvider(
+	// resolving ambient environment, file, or workload credentials. Only
+	// AuthProviderDefault leaves the chain to the SDK.
+	if settings.AuthType != models.AuthProviderDefault {
+		loadOptions = append(loadOptions, config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
 				settings.Secrets.AccessKeyID,
 				settings.Secrets.SecretAccessKey,
 				settings.Secrets.SessionToken,
 			),
-		),
+		))
 	}
 
 	awsConfig, err := config.LoadDefaultConfig(ctx, loadOptions...)

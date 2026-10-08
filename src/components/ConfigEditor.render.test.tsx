@@ -60,7 +60,10 @@ describe('ConfigEditor', () => {
     renderEditor({ authType: 'keys' });
 
     const provider = screen.getByLabelText('Authentication Provider') as HTMLSelectElement;
-    expect(Array.from(provider.options).map((option) => option.text)).toEqual(['Access & secret key']);
+    expect(Array.from(provider.options).map((option) => option.text)).toEqual([
+      'AWS SDK Default',
+      'Access & secret key',
+    ]);
     expect(provider.value).toBe('keys');
   });
 
@@ -70,19 +73,25 @@ describe('ConfigEditor', () => {
     expect(screen.getByLabelText('Secret access key')).toBeInTheDocument();
   });
 
-  it('offers Assume Role ARN alongside the credentials', () => {
-    renderEditor({ authType: 'keys' });
+  it('asks for no credentials for the default provider', () => {
+    renderEditor({ authType: 'default' });
+    expect(screen.queryByLabelText('Access key ID')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Secret access key')).not.toBeInTheDocument();
+  });
+
+  it.each(['default', 'keys'] as const)('offers Assume Role ARN for the %s provider', (authType) => {
+    renderEditor({ authType });
     expect(screen.getByLabelText('Assume Role ARN')).toBeInTheDocument();
   });
 
   it('hides the external ID and session name until a role is given', () => {
-    renderEditor({ authType: 'keys' });
+    renderEditor({ authType: 'default' });
     expect(screen.queryByLabelText('External ID')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Role session name')).not.toBeInTheDocument();
   });
 
   it('reveals the external ID and session name once a role is given', () => {
-    renderEditor({ authType: 'keys', assumeRoleArn: 'arn:aws:iam::123456789012:role/GrafanaCostExplorer' });
+    renderEditor({ authType: 'default', assumeRoleArn: 'arn:aws:iam::123456789012:role/GrafanaCostExplorer' });
     expect(screen.getByLabelText('External ID')).toBeInTheDocument();
     expect(screen.getByLabelText('Role session name')).toBeInTheDocument();
   });

@@ -13,6 +13,8 @@ import (
 // `allowed_auth_providers` key of its `[aws]` configuration section and stored
 // as a data source's AuthType.
 const (
+	// AuthProviderDefault is the AWS SDK default credential chain.
+	AuthProviderDefault = "default"
 	// AuthProviderKeys is an access key and secret access key.
 	AuthProviderKeys = "keys"
 )
@@ -104,7 +106,7 @@ func (s *PluginSettings) ApplyDefaults() {
 
 func (s PluginSettings) Validate() error {
 	switch s.AuthType {
-	case AuthProviderKeys:
+	case AuthProviderDefault, AuthProviderKeys:
 	default:
 		return fmt.Errorf("authentication provider %q is unsupported", s.AuthType)
 	}
@@ -128,11 +130,13 @@ func (s PluginSettings) Validate() error {
 		}
 	}
 
-	if s.Secrets == nil || strings.TrimSpace(s.Secrets.AccessKeyID) == "" {
-		return fmt.Errorf("access key ID is required for access key authentication")
-	}
-	if strings.TrimSpace(s.Secrets.SecretAccessKey) == "" {
-		return fmt.Errorf("secret access key is required for access key authentication")
+	if s.AuthType == AuthProviderKeys {
+		if s.Secrets == nil || strings.TrimSpace(s.Secrets.AccessKeyID) == "" {
+			return fmt.Errorf("access key ID is required for access key authentication")
+		}
+		if strings.TrimSpace(s.Secrets.SecretAccessKey) == "" {
+			return fmt.Errorf("secret access key is required for access key authentication")
+		}
 	}
 
 	return nil

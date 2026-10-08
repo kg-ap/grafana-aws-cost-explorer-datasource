@@ -43,12 +43,26 @@ describe('validateConfig', () => {
     expect(errors.credentials).toBe('Access key ID and secret access key are required.');
   });
 
-  it('accepts a complete role ARN', () => {
-    expect(validateConfig(config({ authType: 'keys', assumeRoleArn: roleArn }, accessKeys))).toEqual({});
+  it('requires no stored credentials for the default provider', () => {
+    expect(validateConfig(config({ authType: 'default' }))).toEqual({});
   });
 
-  it('ignores role settings when no ARN is given', () => {
-    expect(validateConfig(config({ authType: 'keys', roleSessionName: '!' }, accessKeys))).toEqual({});
+  it('still validates non-credential settings for the default provider', () => {
+    expect(validateConfig(config({ authType: 'default', region: 'not a region' }))).toEqual({
+      region: 'Enter an AWS region such as us-east-1.',
+    });
+  });
+
+  describe.each(['default', 'keys'] as const)('with the %s provider', (authType) => {
+    const secrets = authType === 'keys' ? accessKeys : {};
+
+    it('accepts a complete role ARN', () => {
+      expect(validateConfig(config({ authType, assumeRoleArn: roleArn }, secrets))).toEqual({});
+    });
+
+    it('ignores role settings when no ARN is given', () => {
+      expect(validateConfig(config({ authType, roleSessionName: '!' }, secrets))).toEqual({});
+    });
   });
 
   describe('legacy settings', () => {

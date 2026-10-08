@@ -37,12 +37,14 @@ export function validateConfig(
     }
   }
 
-  const hasAccessKey =
-    Boolean(options.secureJsonFields.accessKeyId) || Boolean(options.secureJsonData?.accessKeyId?.trim());
-  const hasSecret =
-    Boolean(options.secureJsonFields.secretAccessKey) || Boolean(options.secureJsonData?.secretAccessKey?.trim());
-  if (!hasAccessKey || !hasSecret) {
-    errors.credentials = 'Access key ID and secret access key are required.';
+  if (settings.authType === 'keys') {
+    const hasAccessKey =
+      Boolean(options.secureJsonFields.accessKeyId) || Boolean(options.secureJsonData?.accessKeyId?.trim());
+    const hasSecret =
+      Boolean(options.secureJsonFields.secretAccessKey) || Boolean(options.secureJsonData?.secretAccessKey?.trim());
+    if (!hasAccessKey || !hasSecret) {
+      errors.credentials = 'Access key ID and secret access key are required.';
+    }
   }
 
   return errors;
