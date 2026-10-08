@@ -58,20 +58,29 @@ secret access key, and session token. Grafana encrypts these values at rest and
 only supplies decrypted values to the backend. After saving, the browser sees
 only booleans in `secureJsonFields`, not the stored values.
 
-### Static credentials
+Authentication is two independent choices: `AuthType` selects a credentials
+provider, and an optional `AssumeRoleARN` layers a role on top of whatever that
+provider resolved.
+
+### Access & secret key (`keys`)
 
 The backend passes the configured access key ID, secret access key, and
 optional session token directly to the AWS SDK static provider. An explicit
-provider is always installed, preventing fallback to environment variables,
-shared files, web identity, or instance metadata.
+provider is installed, preventing fallback to environment variables, shared
+files, web identity, or instance metadata.
 
-### AssumeRole
+### Assume Role ARN
 
-The backend configures the STS client with explicit source credentials and
-wraps `stscreds.NewAssumeRoleProvider` in the SDK credential cache. The
-configured role ARN, optional external ID, and role session name are sent to
-STS. Resulting temporary credentials are held by the SDK and never exposed to
-the plugin frontend or query model.
+When set, the credentials resolved above sign an STS call rather than a Cost
+Explorer one: the backend wraps `stscreds.NewAssumeRoleProvider` in the SDK
+credential cache, sending the role ARN, optional external ID, and role session
+name. The resulting temporary credentials are held by the SDK and never exposed
+to the plugin frontend or query model.
+
+`ApplyDefaults` folds settings saved under the superseded `authMode` into these
+two fields: `static` and `assumeRole` both become `keys`, and `assumeRole`
+carries its role ARN across. Any other stored value is left untranslated rather
+than reinterpreted as the provider that shares its name.
 
 ## Query lifecycle
 

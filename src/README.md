@@ -4,8 +4,8 @@ Query AWS Cost Explorer directly from Grafana with a visual query builder and
 server-side caching—without building a CUR/Athena pipeline or manually signing
 API requests.
 
-This independent open-source backend data-source plugin supports encrypted
-static credentials and AssumeRole with explicit source credentials. It queries
+This independent open-source backend data-source plugin authenticates with an
+access key, optionally assuming a role on top of it. It queries
 `GetCostAndUsage`, follows AWS pagination, and returns native Grafana
 time-series or table data frames.
 
@@ -22,11 +22,12 @@ time-series or table data frames.
 
 ## Configuration
 
-**Static credentials** accepts an access key ID, secret access key, and optional
-session token. **Assume an IAM role** requires explicit source credentials and
-accepts a target role ARN, optional external ID, and session name. All
-credential values are stored only in Grafana secure JSON data; the plugin does
-not use the AWS SDK ambient credential chain.
+**Access & secret key** accepts an access key ID, secret access key, and
+optional session token, stored only in Grafana secure JSON data; the plugin
+never falls back to the ambient credential chain.
+
+An optional **Assume Role ARN** is assumed using those credentials rather than
+querying Cost Explorer with them directly.
 
 The final AWS identity needs:
 

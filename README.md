@@ -133,11 +133,16 @@ No signing credential is required by ordinary CI or unit tests.
 
 ## Data-source configuration
 
-### Static credentials
+An **Authentication Provider** supplies credentials, and an optional **Assume
+Role ARN** layers a role on top of it.
 
-Choose **Static credentials**, then configure an access key ID, secret access
-key, optional session token, and AWS region. Prefer short-lived credentials and
-rotate configured credentials regularly.
+### Authentication Provider
+
+#### Access & secret key
+
+Takes an access key ID, a secret access key, and an optional session token. The
+plugin installs an explicit credentials provider, so it never falls back to an
+ambient identity.
 
 All credential values are written to Grafana `secureJsonData`. Grafana encrypts
 them at rest and returns only configured/not-configured flags to the browser
@@ -145,25 +150,21 @@ after saving. The backend receives decrypted values only when Grafana creates
 the data-source instance. They are never logged or placed in query models or
 cache keys.
 
-### AssumeRole
+### Assume Role ARN
 
-Choose **Assume an IAM role**, then configure:
+Optional, and independent of the provider: the selected provider is used to
+assume the role rather than to query Cost Explorer directly. An external ID and
+role session name may be given alongside it, and the external ID is stored as a
+secret.
 
-- a source access key ID and secret access key
-- an optional source session token
-- the full target IAM role ARN
-- an optional external ID
-- an optional role session name
-- the AWS region
+The resolved identity needs `sts:AssumeRole` on the target role, and that
+role's trust policy must trust it.
 
-The plugin passes the source credentials directly to the AWS SDK and uses them
-only to call STS AssumeRole. It does not resolve credentials from environment
-variables, shared files, ECS/EC2 metadata, or web identity. The source identity
-needs permission for `sts:AssumeRole`, and the target role trust policy must
-trust that source. The target role needs the Cost Explorer policy below.
+### Upgrading
 
-The source credentials and external ID are stored in secure JSON data. AWS does
-not define an external ID as a password, but the plugin treats it as a secret.
+Data sources saved as `static` or `assumeRole` keep working: both are read as
+the `keys` provider, and `assumeRole` carries its role ARN across. Any other
+stored `authMode` is not translated and has to be reconfigured.
 
 ## IAM policy
 
@@ -185,7 +186,7 @@ The target AWS identity needs only this MVP action:
 
 Cost Explorer does not provide a resource ARN for this operation, so
 `Resource` must be `"*"`. The plugin does not need or request AWS write access.
-AssumeRole source identities additionally require `sts:AssumeRole` for the
+An identity that assumes a role additionally requires `sts:AssumeRole` for that
 specific target role; that permission belongs in the source policy, not this
 target role policy.
 

@@ -1,10 +1,7 @@
 import { ComboboxOption } from '@grafana/ui';
-import { AuthMode, CostMetric, Granularity, GroupBy, ResultFormat, TopN } from './types';
+import { AuthType, CostMetric, Granularity, GroupBy, ResultFormat, TopN } from './types';
 
-export const AUTH_OPTIONS: Array<ComboboxOption<AuthMode>> = [
-  { label: 'Assume an IAM role', value: 'assumeRole' },
-  { label: 'Static credentials', value: 'static' },
-];
+export const AUTH_OPTIONS: Array<ComboboxOption<AuthType>> = [{ label: 'Access & secret key', value: 'keys' }];
 
 export const METRIC_OPTIONS: Array<ComboboxOption<CostMetric>> = [
   { label: 'Unblended cost', value: 'UnblendedCost' },
