@@ -88,6 +88,17 @@ two fields: `static` and `assumeRole` both become `keys`, and `assumeRole`
 carries its role ARN across. Any other stored value is left untranslated rather
 than reinterpreted as the provider that shares its name.
 
+### Server-side authentication policy
+
+`AuthSettings` reads `allowed_auth_providers` and `assume_role_enabled` from
+the plugin context, falling back to the process environment and then to
+Grafana's defaults. `AuthType` holds the values `allowed_auth_providers` lists,
+so no translation is involved, and the client factory refuses whatever the
+server withholds.
+Grafana shares the section only with the plugins `[aws]
+forward_settings_to_plugins` names; elsewhere its defaults apply, permitting
+`default`, `keys`, and `credentials`.
+
 ## Query lifecycle
 
 1. Decode, default, and validate the versioned query.

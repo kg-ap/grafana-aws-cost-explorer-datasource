@@ -167,6 +167,26 @@ stored as a secret.
 The resolved identity needs `sts:AssumeRole` on the target role, and that
 role's trust policy must trust it.
 
+### Restricting authentication
+
+An administrator restricts this plugin through the `[aws]` section that governs
+every AWS data source. `allowed_auth_providers` holds the same values as the
+Authentication Provider, and `assume_role_enabled` governs the role:
+
+```ini
+[aws]
+allowed_auth_providers = keys, credentials
+assume_role_enabled = false
+forward_settings_to_plugins = cloudwatch, ivlabsdev-awscostexplorer-datasource
+```
+
+Grafana shares `[aws]` only with the plugins `forward_settings_to_plugins`
+names, so list this plugin for either restriction to reach it — along with any
+other AWS data source in use, since the key replaces the default list rather
+than adding to it. Listing it also forwards `AWS_ROLE_ARN` and
+`AWS_WEB_IDENTITY_TOKEN_FILE`, which EKS web identity needs and a plugin
+process does not otherwise receive.
+
 ### Upgrading
 
 Data sources saved as `static` or `assumeRole` keep working: both are read as

@@ -56,6 +56,20 @@ func TestDefaultProviderResolvesTheSDKChain(t *testing.T) {
 	}
 }
 
+// The Grafana server has the final say, through its [aws] section.
+func TestDefaultProviderIsRefusedWhenTheServerDisallowsIt(t *testing.T) {
+	isolateAmbientCredentials(t, "ambient-access-key", "ambient-secret")
+	t.Setenv(models.AllowedAuthProvidersKey, "keys,credentials")
+
+	if _, err := NewFactory().New(context.Background(), models.PluginSettings{
+		AuthType: models.AuthProviderDefault,
+		Region:   "us-east-1",
+		Secrets:  &models.SecretPluginSettings{},
+	}); err == nil {
+		t.Fatal("expected the factory to refuse a provider the Grafana server does not allow")
+	}
+}
+
 func costExplorerClient(t *testing.T, bundle *Bundle) *costexplorer.Client {
 	t.Helper()
 	client, ok := bundle.CostExplorer.(*costexplorer.Client)

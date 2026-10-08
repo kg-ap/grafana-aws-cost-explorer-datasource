@@ -39,6 +39,10 @@ func (f *SDKFactory) New(ctx context.Context, settings models.PluginSettings) (*
 	if err := settings.Validate(); err != nil {
 		return nil, err
 	}
+	if err := models.ReadAuthSettings(ctx).Permits(settings); err != nil {
+		return nil, err
+	}
+
 	loadOptions := []func(*config.LoadOptions) error{config.WithRegion(settings.Region)}
 
 	// Installing the credentials supplied through Grafana keeps the SDK from
